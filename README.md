@@ -1,0 +1,2 @@
+# PerWorldWhitelist
+Whitelist your world

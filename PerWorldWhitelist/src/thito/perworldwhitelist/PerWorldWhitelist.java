@@ -357,6 +357,7 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 		final Location dest = e.getTo();
 		final World world = dest.getWorld();
 		final Player player = e.getPlayer();
+		if (e.getFrom().getWorld() == world) return;
 		if (isEnabled(world)) {
 			if (!getPlayers(world).contains(player.getName())) {
 				e.setCancelled(true);

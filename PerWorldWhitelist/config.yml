@@ -1,0 +1,10 @@
+worlds:
+  world:
+    enable: false
+    # placeholder
+    # %world - World Name
+    # %player - Player Name
+    message: "You are not whitelisted in %world world"
+    fallback: true
+    players:
+    - BlueObsidian

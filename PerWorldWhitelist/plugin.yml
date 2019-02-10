@@ -1,0 +1,24 @@
+name: PerWorldWhitelist
+version: 1.0
+main: thito.perworldwhitelist.PerWorldWhitelist
+authors:
+- BlueObsidian
+commands:
+  perworldwhitelist:
+    description: Whitelist a world
+    aliases:
+    - "pww"
+    - "ww"
+    - "worldwhitelist"
+    - "wwhitelist"
+    - "worldw"
+    - "perww"
+    - "perworldw"
+    - "pworldw"
+    - "pworldwhitelist"
+    - "pwwhitelist"
+    - "perwwhitelist"
+permissions:
+  perworldwhitelist.admin:
+    description: Allows you to access PerWorldWhitelist command.
+    default: op

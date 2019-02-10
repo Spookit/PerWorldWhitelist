@@ -7,6 +7,7 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -80,6 +81,10 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 						List<String> players = getPlayers(w);
 						sender.sendMessage(ChatColor.YELLOW+"Players ("+ChatColor.AQUA.toString()+players.size()+ChatColor.YELLOW.toString()+"):");
 						for (String s : players) {
+							String[] split = s.split(":",2);
+							if (split.length > 1) {
+								s = split[0] + " (UUID: "+split[1]+")";
+							}
 							sender.sendMessage(ChatColor.DARK_AQUA+"- "+s);
 						}
 						if (players.isEmpty()) {
@@ -217,8 +222,17 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 		}
 		List<String> strings = getConfig().getStringList("worlds."+w.getName()+".players");
 		if (strings == null) strings = new ArrayList<>();
-		if (strings.contains(player)) return false;
-		strings.add(player);
+		String string;
+		boolean useUUID = getConfig().getBoolean("extra.use-uuid");
+		try {
+			OfflinePlayer off = useUUID ? getServer().getOfflinePlayer(player) : null;
+			string = off == null ? player : player+":"+off.getUniqueId();
+		} catch (Throwable t) {
+			Player pl = useUUID ? getServer().getPlayerExact(player) : null;
+			string = pl == null ? player : player+":"+pl.getUniqueId();
+		}
+		if (strings.contains(string)) return false;
+		strings.add(string);
 		getConfig().set("worlds."+w.getName()+".players", strings);
 		saveConfig();
 		return true;
@@ -231,7 +245,16 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 		}
 		List<String> strings = getConfig().getStringList("worlds."+w.getName()+".players");
 		if (strings == null) strings = new ArrayList<>();
-		if (!strings.remove(player)) return false;
+		String option = null;
+		for (String s : strings) {
+			for (String split : s.split(":",2)) {
+				if (split.equals(player)) {
+					option = s;
+				}
+			}
+		}
+		if (option == null) return false;
+		strings.remove(option);
 		getConfig().set("worlds."+w.getName()+".players", strings);
 		saveConfig();
 		return true;
@@ -301,6 +324,16 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 		saveConfig();
 	}
 	
+	public boolean isAllowed(Player p,World w) {
+		for (String s : getPlayers(w)) {
+			for (String split : s.split(":",2)) {
+				if (p.getName().equals(split) && !getConfig().getBoolean("extra.use-uuid")) return true;
+				if (p.getUniqueId().toString().equals(split) && getConfig().getBoolean("extra.use-uuid")) return true;
+			}
+		}
+		return false;
+	}
+	
 	public void reloadConfig() {
 		if (!new File(getDataFolder(),"config.yml").exists()) {
 			saveDefaultConfig();
@@ -338,6 +371,18 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 	public void dispatchLogin(PlayerLoginEvent e) {
 		final World world = e.getPlayer().getWorld();
 		final Player player = e.getPlayer();
+		if (e.getResult() == Result.KICK_WHITELIST && !getConfig().getBoolean("extra.global-use-uuid")) {
+			boolean whitelisted = false;
+			for (OfflinePlayer p : getServer().getWhitelistedPlayers()) {
+				if (p.getName().equals(player.getName())) {
+					whitelisted = true;
+					break;
+				}
+			}
+			if (whitelisted) {
+				e.allow();
+			}
+		}
 		if (isEnabled(world)) {
 			if (!getPlayers(world).contains(player.getName())) {
 				if (moveToFallback(player)) {

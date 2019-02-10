@@ -1,3 +1,10 @@
+extra:
+  # World whitelist UUID option
+  # set false to check by players UUID
+  use-uuid: false
+  # Normal whitelist UUID option
+  # set false to check by players name
+  global-use-uuid: false
 worlds:
   world:
     enable: false
@@ -7,4 +14,6 @@ worlds:
     message: "You are not whitelisted in %world world"
     fallback: true
     players:
-    - BlueObsidian
+    # pattern: <name>:<alias1>:<alias2>:...
+    # example: <name>:<UUID>
+    - "BlueObsidian:3b6033ca-32e4-42c2-96aa-127a657f1e45"

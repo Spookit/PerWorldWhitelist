@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.TravelAgent;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -18,6 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -350,6 +352,23 @@ public class PerWorldWhitelist extends JavaPlugin implements Listener {
 			}
 		}
 		return false;
+	}
+	
+	@EventHandler
+	public void dispatchPortal(PlayerPortalEvent e) {
+		final Location dest = e.getTo();
+		final World world = dest.getWorld();
+		final Player player = e.getPlayer();
+		if (e.getFrom().getWorld() == world) return;
+		if (isEnabled(world)) {
+			if (!getPlayers(world).contains(player.getName())) {
+				e.useTravelAgent(false);
+				TravelAgent agent = e.getPortalTravelAgent();
+				if (agent != null) agent.setCanCreatePortal(false);
+				e.setCancelled(true);
+				player.sendMessage(getMessage(world).replace("%world", world.getName()).replace("%player", player.getName()));
+			}
+		}
 	}
 	
 	@EventHandler(priority=EventPriority.LOWEST)
